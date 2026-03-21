@@ -8,6 +8,7 @@
 #include <windows.h>
 #include <lmcons.h>
 #include <winsock.h>
+#include <sys/stat.h>
 
 void network() {
  WSADATA wsaData;
@@ -65,6 +66,25 @@ int main(int argc, char *argv[]) {
          getuser();
          printf("---------------\n");
          network();
+        } else if (strcmp(argv[i], "-dir") == 0) {
+            // Check if the next argument is -mk and if there is a directory name provided
+            if (i + 2 < argc && strcmp(argv[i+1], "-mk") == 0) {
+                const char *dirName = argv[i+2];
+                #ifdef _WIN32
+                    int result = _mkdir(dirName);
+                #else
+                    int result = mkdir(dirName, 0777);
+                #endif
+                // Check if the directory was created successfully
+                if (result == 0) printf("Directory '%s' created.\n", dirName);
+                else perror("Error creating directory");
+
+                i = 2;
+                continue;
+            } else {
+              printf("Error: -dir requires -mk <name>\n");
+              return 1; 
+            }
         } else if (argv[i][0] == '-') { // Removed the extra ']' here
             printf("Unknown option: %s\n", argv[i]);
             return 1;
