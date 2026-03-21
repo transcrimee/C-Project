@@ -1,4 +1,5 @@
 #pragma comment(lib, "advapi32.lib")
+#pragma comment(lib, "ws2_32.lib")
 #include <stdio.h>
 #include <stdbool.h>
 #include <time.h>
@@ -6,11 +7,34 @@
 #include <string.h>
 #include <windows.h>
 #include <lmcons.h>
+#include <winsock.h>
+
+void network() {
+ WSADATA wsaData;
+ char hostname[256];
+ struct hostent *host_entry;
+ int i = 0;
+ // Initialize Winsock
+ if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) return 1;
+ gethostname(hostname, sizeof(hostname));
+ printf("Host: %s\n", hostname);
+
+ host_entry = gethostbyname(hostname);
+ 
+// Get the hostname and print the IP addresses associated with the hostname
+ while (host_entry->h_addr_list[i] != NULL) {
+    printf("IP: %s\n", inet_ntoa(*(struct in_addr *)host_entry->h_addr_list[i]));
+    i++;
+ }
+  WSACleanup();
+  return 0;
+
+}
 
 void getuser() {
   TCHAR username[UNLEN + 1];
   DWORD username_len = UNLEN + 1;
-
+  // Get the username of the current user
   if (GetUserName(username, &username_len)) {
    
    printf(" %s\n", (char*)username);
@@ -25,7 +49,7 @@ int main(int argc, char *argv[]) {
         printf("No arguments provided. Use -h for help.\n"); // Added semicolon here
         return 0;
     }
-
+     // Process command-line arguments
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             printf("Usage: main.exe [options]\n");
@@ -39,7 +63,8 @@ int main(int argc, char *argv[]) {
         } else if (strcmp(argv[i], "-hi") == 0 || strcmp(argv[i], "--hello") == 0) {
          printf("Hello Word by");
          getuser();
-         printf("\n");
+         printf("---------------\n");
+         network();
         } else if (argv[i][0] == '-') { // Removed the extra ']' here
             printf("Unknown option: %s\n", argv[i]);
             return 1;
