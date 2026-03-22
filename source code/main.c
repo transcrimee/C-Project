@@ -10,18 +10,26 @@
 #include <winsock.h>
 #include <sys/stat.h>
 
-void network() {
+int network() {
  WSADATA wsaData;
  char hostname[256];
  struct hostent *host_entry;
  int i = 0;
  // Initialize Winsock
- if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) return 1;
- gethostname(hostname, sizeof(hostname));
- printf("Host: %s\n", hostname);
+ if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+  return 1;
+ } 
+if (gethostname(hostname, sizeof(hostname)) == SOCKET_ERROR) {
+  WSACleanup();
+  return 1; 
+ }
+  printf("Host: %s\n", hostname);
 
  host_entry = gethostbyname(hostname);
- 
+ if (host_entry == NULL) {
+     WSACleanup();
+    return 1;
+ }     
 // Get the hostname and print the IP addresses associated with the hostname
  while (host_entry->h_addr_list[i] != NULL) {
     printf("IP: %s\n", inet_ntoa(*(struct in_addr *)host_entry->h_addr_list[i]));
@@ -29,7 +37,6 @@ void network() {
  }
   WSACleanup();
   return 0;
-
 }
 
 void getuser() {
@@ -104,7 +111,7 @@ int main(int argc, char *argv[]) {
            printf("Error: -dir requires <action> and <name>\n");
            return 1;  
         }
-        // Check if the argument starts with '-' but is not recognized as a valid option
+        // If the argument starts with '-' but is not recognized, print an error message
         } else if (argv[i][0] == '-') { // Removed the extra ']' here
             printf("Unknown option: %s\n", argv[i]);
             return 1;
