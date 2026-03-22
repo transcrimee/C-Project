@@ -67,9 +67,12 @@ int main(int argc, char *argv[]) {
          printf("---------------\n");
          network();
         } else if (strcmp(argv[i], "-dir") == 0) {
+            if (i + 2 < argc) {
+             const char *action = argv[i+1];
+             const char *dirName = argv[i+2];
+             int result = -1;
             // Check if the next argument is -mk and if there is a directory name provided
-            if (i + 2 < argc && strcmp(argv[i+1], "-mk") == 0) {
-                const char *dirName = argv[i+2];
+            if (strcmp(action, "-mk") == 0) {
                 #ifdef _WIN32
                     int result = _mkdir(dirName);
                 #else
@@ -78,16 +81,34 @@ int main(int argc, char *argv[]) {
                 // Check if the directory was created successfully
                 if (result == 0) printf("Directory '%s' created.\n", dirName);
                 else perror("Error creating directory");
+            // Check if the next argument is -rm and if there is a directory name provided
+            } else if (strcmp(action, "-rm") == 0) {
+                  #ifdef _WIN32
+                        int result = _rmdir(dirName);
+                  #else
+                    int result = _rmdir(dirName);
+                  #endif
+                  // Check if the directory was removed successfully
+                  if (result == 0) printf("Directory '%s' Remove. \n", dirName);
+                  else perror("Error Removing directory");
 
-                i = 2;
-                continue;
             } else {
-              printf("Error: -dir requires -mk <name>\n");
+              printf("Error: -dir requires -mk | -rm <name>\n");
               return 1; 
             }
+            // Skip the next two arguments since they have been processed
+            i = 2;
+            continue;
+        // If -dir is provided without enough arguments, print an error message
+        } else {
+           printf("Error: -dir requires <action> and <name>\n");
+           return 1;  
+        }
+        // Check if the argument starts with '-' but is not recognized as a valid option
         } else if (argv[i][0] == '-') { // Removed the extra ']' here
             printf("Unknown option: %s\n", argv[i]);
             return 1;
+            
         } else {
           printf("Processing file: %s\n", argv[i]);  
         }
