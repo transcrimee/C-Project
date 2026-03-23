@@ -10,6 +10,21 @@
 #include <winsock.h>
 #include <sys/stat.h>
 
+void logging(const char *message) {
+ FILE *fptr = fopen("log.txt", "a");
+
+ if (fptr == NULL) {
+    printf("Error opening file!\n");
+    return;
+ }
+ 
+ fprintf(fptr, "%s\n", message);
+ 
+ fclose(fptr);
+ 
+}
+
+
 int network() {
  WSADATA wsaData;
  char hostname[256];
@@ -46,8 +61,10 @@ void getuser() {
   if (GetUserName(username, &username_len)) {
    
    printf(" %s\n", (char*)username);
+   logging("INFO: Username was found");
   } else {
     fprintf(stderr, "Failed to get username.\n");
+    logging("ERROR: Could not get username - not found");
   }
 }
 
@@ -86,7 +103,7 @@ int main(int argc, char *argv[]) {
                     int result = mkdir(dirName, 0777);
                 #endif
                 // Check if the directory was created successfully
-                if (result == 0) printf("Directory '%s' created.\n", dirName);
+                if (result == 0) printf("Directory '%s' created.\n", dirName), logging("INFO: Directory was Created");
                 else perror("Error creating directory");
             // Check if the next argument is -rm and if there is a directory name provided
             } else if (strcmp(action, "-rm") == 0) {
@@ -96,11 +113,12 @@ int main(int argc, char *argv[]) {
                     int result = _rmdir(dirName);
                   #endif
                   // Check if the directory was removed successfully
-                  if (result == 0) printf("Directory '%s' Remove. \n", dirName);
+                  if (result == 0) printf("Directory '%s' Remove. \n", dirName),  logging("INFO: Directory was Remove");
                   else perror("Error Removing directory");
 
             } else {
               printf("Error: -dir requires -mk | -rm <name>\n");
+              logging("ERROR: USER NEED ADD -mk or -rm");
               return 1; 
             }
             // Skip the next two arguments since they have been processed
@@ -114,6 +132,7 @@ int main(int argc, char *argv[]) {
         // If the argument starts with '-' but is not recognized, print an error message
         } else if (argv[i][0] == '-') { // Removed the extra ']' here
             printf("Unknown option: %s\n", argv[i]);
+            logging("ERROR: Unknown option:");
             return 1;
             
         } else {
